@@ -1,0 +1,215 @@
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+local GuiService = game:GetService("GuiService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Function to create a notification popup
+local function notify(message, duration)
+    StarterGui:SetCore("SendNotification", {
+        Title = "KeanW Script",
+        Text = message,
+        Duration = duration or 2 -- Default duration is 2 seconds
+    })
+end
+
+-- Create the pop-up GUI
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 10
+
+-- Black background
+local background = Instance.new("Frame", screenGui)
+background.Size = UDim2.new(1, 0, 1, 0)
+background.BackgroundColor3 = Color3.fromRGB(19, 0, 20)
+
+-- Uploaded image (your provided URL)
+local image = Instance.new("ImageLabel", background)
+image.Image = "https://media.discordapp.net/attachments/1253154833922527283/1310440469288714260/cards-removebg-preview.png?ex=67453a4a&is=6743e8ca&hm=d4d075f2d76fef4e2384c505ee3d9261a3f69217218706b07f0c8283d27aa4ac&=&format=webp&quality=lossless&width=437&height=437"
+image.Size = UDim2.new(0, 300, 0, 300)
+image.Position = UDim2.new(0.5, -150, 0.25, -150)
+image.BackgroundTransparency = 1
+
+-- Text above the input
+local enterKeyText = Instance.new("TextLabel", background)
+enterKeyText.Text = "Enter Key"
+enterKeyText.Font = Enum.Font.SourceSansBold
+enterKeyText.TextSize = 32
+enterKeyText.TextColor3 = Color3.fromRGB(255, 255, 255)
+enterKeyText.Position = UDim2.new(0.5, 0, 0.6, 0)
+enterKeyText.AnchorPoint = Vector2.new(0.5, 0.5)
+enterKeyText.BackgroundTransparency = 1
+
+-- Text box for key input
+local inputBox = Instance.new("TextBox", background)
+inputBox.Size = UDim2.new(0.5, 0, 0.08, 0)
+inputBox.Position = UDim2.new(0.5, 0, 0.7, 0)
+inputBox.AnchorPoint = Vector2.new(0.5, 0.5)
+inputBox.Text = ""
+inputBox.PlaceholderText = "Enter the key here..."
+inputBox.Font = Enum.Font.SourceSans
+inputBox.TextSize = 20
+inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+inputBox.BackgroundColor3 = Color3.fromRGB(19, 0, 20)
+inputBox.BorderSizePixel = 0
+
+-- Fading text at the bottom
+local creatorText = Instance.new("TextLabel", background)
+creatorText.Text = "this was made by Almighty/Seb"
+creatorText.Font = Enum.Font.SourceSans
+creatorText.TextSize = 12
+creatorText.TextColor3 = Color3.fromRGB(255, 255, 255)
+creatorText.Position = UDim2.new(0.01, 0, 0.95, 0)
+creatorText.AnchorPoint = Vector2.new(0, 0.5)
+creatorText.BackgroundTransparency = 1
+
+-- Fading in the word "Almighty"
+local almightyText = Instance.new("TextLabel", background)
+almightyText.Text = "Almighty"
+almightyText.Font = Enum.Font.SourceSansBold
+almightyText.TextSize = 36
+almightyText.TextColor3 = Color3.fromRGB(255, 255, 255)
+almightyText.Position = UDim2.new(0.5, 0, 0.55, 0)
+almightyText.AnchorPoint = Vector2.new(0.5, 0.5)
+almightyText.BackgroundTransparency = 1
+almightyText.Visible = false
+
+-- Key Authentication
+local correctKey = "439md-dkQk-Klsm8-Alm1ghty"
+
+inputBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        if inputBox.Text == correctKey then
+            -- Correct key entered
+            notify("Key Correct. Loading script...", 3)
+            -- Fade out GUI
+            local tween = TweenService:Create(background, TweenInfo.new(1), {BackgroundTransparency = 1})
+            tween:Play()
+            wait(1)
+            screenGui:Destroy()
+        else
+            -- Incorrect key
+            notify("Invalid Key. Please try again.", 2)
+            inputBox.Text = ""
+        end
+    end
+end)
+
+-- Initial fade-in effect for "Almighty"
+wait(0.5)
+almightyText.Visible = true
+local almightyTween = TweenService:Create(almightyText, TweenInfo.new(2), {TextTransparency = 0})
+almightyTween:Play()
+
+-- Main Script Logic (Aimbot and Camera Lock)
+getgenv().KeanW = {
+    Main = {
+        Aimbot = {
+            Enabled = false, -- Start with aimbot disabled
+            Keybind = "c",
+            Part = "UpperTorso",
+            UsePrediction = true,
+            Prediction = 0.18,
+            FirstPerson = true,
+            ThirdPerson = true,
+            Radius = 50,
+            Smoothness = true,
+            Amount = 0.5,
+            ClosestPart = true,
+            Checks = {
+                DeathCheck = true,
+                OwnDeathCheck = true,
+                WallCheck = true
+            }
+        },
+        CameraLock = {
+            Enabled = false, -- Start with camera lock disabled
+            Keybind = "q",
+            Target = nil
+        }
+    }
+}
+
+-- Function to get the closest player
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = getgenv().KeanW.Main.Aimbot.Radius
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local char = player.Character
+            local pos = char.HumanoidRootPart.Position
+            local distance = (Camera.CFrame.Position - pos).Magnitude
+
+            if distance < shortestDistance and char.Humanoid.Health > 0 then
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Function to aim at a target with accurate prediction
+local function aimAt(target)
+    if not target or not target.Character then return end
+    local part = target.Character:FindFirstChild(getgenv().KeanW.Main.Aimbot.Part)
+    if not part then return end
+
+    local position = part.Position
+    if getgenv().KeanW.Main.Aimbot.UsePrediction then
+        local velocity = part.Velocity
+        local prediction = getgenv().KeanW.Main.Aimbot.Prediction
+        position = position + (velocity * prediction)
+    end
+
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, position)
+end
+
+-- Toggle Aimbot with Keybind
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    -- Aimbot Toggle
+    if input.KeyCode == Enum.KeyCode[getgenv().KeanW.Main.Aimbot.Keybind:upper()] then
+        getgenv().KeanW.Main.Aimbot.Enabled = not getgenv().KeanW.Main.Aimbot.Enabled
+        notify(getgenv().KeanW.Main.Aimbot.Enabled and "Aimbot Enabled!" or "Aimbot Disabled!", 3)
+    end
+
+    -- Camera Lock Toggle
+    if input.KeyCode == Enum.KeyCode[getgenv().KeanW.Main.CameraLock.Keybind:upper()] then
+        if getgenv().KeanW.Main.CameraLock.Enabled then
+            getgenv().KeanW.Main.CameraLock.Enabled = false
+            getgenv().KeanW.Main.CameraLock.Target = nil
+            notify("Camera Lock Disabled!", 3)
+        else
+            local closestPlayer = getClosestPlayer()
+            if closestPlayer then
+                getgenv().KeanW.Main.CameraLock.Enabled = true
+                getgenv().KeanW.Main.CameraLock.Target = closestPlayer
+                notify("Camera Lock Enabled on " .. closestPlayer.Name, 3)
+            else
+                notify("No valid target found!", 3)
+            end
+        end
+    end
+end)
+
+-- Aimbot Logic
+RunService.RenderStepped:Connect(function()
+    if getgenv().KeanW.Main.Aimbot.Enabled then
+        local closestPlayer = getClosestPlayer()
+        if closestPlayer then
+            aimAt(closestPlayer)
+        end
+    end
+
+    if getgenv().KeanW.Main.CameraLock.Enabled and getgenv().KeanW.Main.CameraLock.Target then
+        aimAt(getgenv().KeanW.Main.CameraLock.Target)
+    end
+end)
